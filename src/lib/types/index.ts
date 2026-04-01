@@ -147,6 +147,21 @@ export interface MonthlyHighlight {
   description: string;
 }
 
+// === 6개월 행동 가이드 ===
+
+export interface MonthlyGuide {
+  month: number;
+  monthStem: string;       // 월운 천간
+  monthBranch: string;     // 월운 지지
+  personalMonth: number;   // 수비학 개인월 수
+  tarotCard: string;       // 대표 타로카드
+  tarotMeaning: string;    // 카드 의미 (1문장)
+  energy: string;          // 종합 에너지 키워드
+  doList: string[];        // 해야 할 것 (2~3개)
+  avoidList: string[];     // 피해야 할 것 (1~2개)
+  focus: string;           // 핵심 행동 지침 (1~2문장)
+}
+
 export interface CharacterCard {
   archetype: string;
   title: string;
@@ -169,4 +184,5 @@ export interface AnalysisResponse {
   crossCheck: CrossCheckResult;
   characterCard: CharacterCard;
   yearlyFortune: YearlyFortune;
+  monthlyGuide: MonthlyGuide[];  // 향후 6개월 행동 가이드
 }

@@ -23,7 +23,7 @@ export default function ResultPage() {
 
   if (!result) return null;
 
-  const { characterCard: card, crossCheck, saju, ziwei, numerology, mbti, yearlyFortune } = result;
+  const { characterCard: card, crossCheck, saju, ziwei, numerology, mbti, yearlyFortune, monthlyGuide } = result;
 
   const toggleSection = (section: string) => {
     setOpenSection(openSection === section ? null : section);
@@ -395,6 +395,74 @@ export default function ResultPage() {
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* 6개월 행동 가이드 */}
+        {monthlyGuide && monthlyGuide.length > 0 && (
+          <div className="mt-4">
+            <div className="bg-[var(--surface)] rounded-2xl p-5 border border-[var(--border)]">
+              <h3 className="text-base font-semibold mb-1 flex items-center gap-2">
+                <span>🃏</span> 6개월 행동 가이드
+              </h3>
+              <p className="text-xs text-[var(--muted)] mb-4">
+                월운 · 자미두수 · 수비학 · 타로 종합 분석
+              </p>
+              <div className="space-y-3">
+                {monthlyGuide.map((g) => (
+                  <div
+                    key={g.month}
+                    className="rounded-xl border border-[var(--border)] overflow-hidden"
+                  >
+                    {/* 월 헤더 */}
+                    <div className="flex items-center justify-between px-4 py-2.5 bg-[var(--surface-light)]">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-bold text-purple-400">{g.month}월</span>
+                        <span className="text-xs text-[var(--muted)]">
+                          {g.monthStem}{g.monthBranch}월
+                        </span>
+                        <span className="text-xs px-1.5 py-0.5 rounded bg-purple-900/30 text-purple-300">
+                          개인월 {g.personalMonth}
+                        </span>
+                      </div>
+                      <span className="text-xs font-medium px-2 py-0.5 rounded-full"
+                        style={{
+                          background: `${card.dominantColor}20`,
+                          color: card.dominantColor,
+                        }}
+                      >
+                        {g.energy}
+                      </span>
+                    </div>
+                    {/* 타로카드 + 지침 */}
+                    <div className="px-4 py-3 space-y-2">
+                      <div className="flex items-start gap-2">
+                        <span className="text-lg">🎴</span>
+                        <div>
+                          <div className="text-xs font-semibold">{g.tarotCard}</div>
+                          <div className="text-xs text-[var(--muted)]">{g.tarotMeaning}</div>
+                        </div>
+                      </div>
+                      <p className="text-xs font-medium text-[var(--foreground)]">{g.focus}</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <div className="text-xs font-medium text-green-400 mb-1">✓ 해야 할 것</div>
+                          {(g.doList ?? []).map((d, i) => (
+                            <div key={i} className="text-xs text-[var(--muted)]">· {d}</div>
+                          ))}
+                        </div>
+                        <div>
+                          <div className="text-xs font-medium text-red-400 mb-1">✕ 피해야 할 것</div>
+                          {(g.avoidList ?? []).map((a, i) => (
+                            <div key={i} className="text-xs text-[var(--muted)]">· {a}</div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         )}
 

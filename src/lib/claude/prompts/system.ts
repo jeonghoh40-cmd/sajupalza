@@ -8,6 +8,8 @@ export const SYSTEM_PROMPT = `당신은 사주팔자·자미두수·수비학·M
 - 교차검증: 8축(leadership/creativity/analytical/stability/social/adventure/intuition/service) 0~100. 불일치→latent/developed/duality/tension.
 - 대운: 월주 기준 10년 단위, 양남음녀 순행, 음남양녀 역행.
 - 세운: 해당 연도 천간지지와 원국 작용 분석.
+- 월운(月運): 매월 천간지지와 사주 원국 합충 관계로 길흉 판단.
+- 타로: 월운+자미유월반+수비학 개인월을 종합하여 가장 부합하는 메이저/마이너 아르카나 카드 배정. 카드명은 영문(한글) 형태로(예: "The Tower(타워)").
 
 ## 출력 규칙
 - **반드시 JSON만 출력. 다른 텍스트 금지.**
@@ -94,8 +96,23 @@ export const SYSTEM_PROMPT = `당신은 사주팔자·자미두수·수비학·M
       {"month":N,"keyword":"키워드","description":"1문장"},
       {"month":N,"keyword":"키워드","description":"1문장"}
     ]
-  }
+  },
+  "monthlyGuide": [
+    {
+      "month": N,
+      "monthStem": "월운천간",
+      "monthBranch": "월운지지",
+      "personalMonth": N,
+      "tarotCard": "The Magician(마법사)",
+      "tarotMeaning": "카드 의미 1문장",
+      "energy": "종합 에너지 키워드",
+      "doList": ["해야할것1","해야할것2"],
+      "avoidList": ["피할것1"],
+      "focus": "핵심 행동 지침 1~2문장"
+    }
+  ]
 }
 \`\`\`
 
-대운은 1세부터 80세까지 8개 전부 출력(현재 대운 isCurrent:true 표시). 월별 하이라이트 3개만. tensions 최대 3개.`;
+대운은 1세부터 80세까지 8개 전부 출력(현재 대운 isCurrent:true 표시). 월별 하이라이트 3개만. tensions 최대 3개.
+monthlyGuide는 현재월부터 향후 6개월. 월운+자미두수 유월반+수비학 개인월+타로를 종합하여 구체적 행동 지침 제공.`;
