@@ -11,11 +11,23 @@ const MODELS = [
   "claude-sonnet-4-6",
 ] as const;
 
-function getApiKey(): string {
+interface AuthConfig {
+  apiKey?: string;
+  authToken?: string;
+}
+
+function getAuthConfig(): AuthConfig {
+  // 1. 명시적 API 키 (sk-ant-로 시작하는 Anthropic API 키)
   if (process.env.ANTHROPIC_API_KEY) {
-    return process.env.ANTHROPIC_API_KEY;
+    const key = process.env.ANTHROPIC_API_KEY;
+    if (key.startsWith("sk-ant-")) {
+      return { apiKey: key };
+    }
+    // API 키 형식이 아니면 OAuth 토큰으로 취급
+    return { authToken: key };
   }
 
+  // 2. Claude Max OAuth 토큰 (로컬 개발용)
   const home = process.env.USERPROFILE || process.env.HOME || "";
   const credPath = join(home, ".claude", ".credentials.json");
 
@@ -23,7 +35,7 @@ function getApiKey(): string {
     try {
       const creds = JSON.parse(readFileSync(credPath, "utf-8"));
       if (creds.claudeAiOauth?.accessToken) {
-        return creds.claudeAiOauth.accessToken;
+        return { authToken: creds.claudeAiOauth.accessToken };
       }
     } catch {
       // ignore
@@ -34,7 +46,11 @@ function getApiKey(): string {
 }
 
 function getClient(): Anthropic {
-  return new Anthropic({ apiKey: getApiKey() });
+  const auth = getAuthConfig();
+  if (auth.authToken) {
+    return new Anthropic({ authToken: auth.authToken, apiKey: undefined });
+  }
+  return new Anthropic({ apiKey: auth.apiKey });
 }
 
 async function callApi(client: Anthropic, model: string, userPrompt: string): Promise<string> {
