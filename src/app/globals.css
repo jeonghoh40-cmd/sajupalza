@@ -1,0 +1,90 @@
+@import "tailwindcss";
+
+:root {
+  --background: #0c0a1a;
+  --foreground: #e8e6f0;
+  --accent: #9333ea;
+  --accent-light: #a855f7;
+  --surface: #1a1730;
+  --surface-light: #252240;
+  --border: #2d2a45;
+  --muted: #8b85a8;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-accent: var(--accent);
+  --color-accent-light: var(--accent-light);
+  --color-surface: var(--surface);
+  --color-surface-light: var(--surface-light);
+  --color-border: var(--border);
+  --color-muted: var(--muted);
+  --font-sans: "Noto Sans KR", -apple-system, sans-serif;
+  --font-mono: monospace;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: "Noto Sans KR", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 모바일 safe area (노치, 하단 바) */
+.safe-area-inset {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+/* 모바일에서 입력 필드 확대 방지 */
+@media (max-width: 640px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* number 스피너 숨기기 */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* 커스텀 스크롤바 */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--surface);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+/* 입력 필드 스타일 */
+input, select {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--foreground) !important;
+}
+input:focus, select:focus {
+  border-color: var(--accent) !important;
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(147, 51, 234, 0.2) !important;
+}
+select option {
+  background: var(--surface);
+  color: var(--foreground);
+}
+
+/* Safari 버튼 기본 스타일 리셋 */
+button {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
