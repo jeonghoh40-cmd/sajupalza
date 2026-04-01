@@ -17,13 +17,18 @@ interface AuthConfig {
 }
 
 function getAuthConfig(): AuthConfig {
-  // 1. 명시적 API 키 (sk-ant-로 시작하는 Anthropic API 키)
+  // 1. 환경변수 ANTHROPIC_API_KEY
   if (process.env.ANTHROPIC_API_KEY) {
     const key = process.env.ANTHROPIC_API_KEY;
-    if (key.startsWith("sk-ant-")) {
+    // sk-ant-oat = OAuth 토큰 → Bearer 인증
+    // sk-ant-api = API 키 → x-api-key 인증
+    if (key.startsWith("sk-ant-oat")) {
+      return { authToken: key };
+    }
+    if (key.startsWith("sk-ant-api")) {
       return { apiKey: key };
     }
-    // API 키 형식이 아니면 OAuth 토큰으로 취급
+    // 알 수 없는 형식은 둘 다 시도할 수 있도록 authToken으로
     return { authToken: key };
   }
 
