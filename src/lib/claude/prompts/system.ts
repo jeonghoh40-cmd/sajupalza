@@ -11,7 +11,8 @@ export const SYSTEM_PROMPT = `당신은 사주팔자·자미두수·수비학·M
 
 ## 출력 규칙
 - **반드시 JSON만 출력. 다른 텍스트 금지.**
-- **모든 summary/reading/description/advice는 반드시 1문장(30자 이내)으로.**
+- **기본 summary/reading/description/advice는 1문장(30자 이내)으로.**
+- **단, career(직업운)와 wealth(재물운)의 summary와 advice는 2~3문장으로 상세히 작성.**
 - **키 이름과 구조를 정확히 지키세요.**
 
 \`\`\`json
@@ -83,8 +84,8 @@ export const SYSTEM_PROMPT = `당신은 사주팔자·자미두수·수비학·M
     "stem": "천간",
     "branch": "지지",
     "overall": {"score":N,"summary":"1문장","advice":"1문장"},
-    "career": {"score":N,"summary":"1문장","advice":"1문장"},
-    "wealth": {"score":N,"summary":"1문장","advice":"1문장"},
+    "career": {"score":N,"summary":"2~3문장 상세 해석","advice":"2~3문장 구체적 조언"},
+    "wealth": {"score":N,"summary":"2~3문장 상세 해석","advice":"2~3문장 구체적 조언"},
     "love": {"score":N,"summary":"1문장","advice":"1문장"},
     "health": {"score":N,"summary":"1문장","advice":"1문장"},
     "relationship": {"score":N,"summary":"1문장","advice":"1문장"},
@@ -97,4 +98,4 @@ export const SYSTEM_PROMPT = `당신은 사주팔자·자미두수·수비학·M
 }
 \`\`\`
 
-대운은 현재 대운 포함 총 5개만. 월별 하이라이트 3개만. tensions 최대 3개.`;
+대운은 1세부터 80세까지 8개 전부 출력(현재 대운 isCurrent:true 표시). 월별 하이라이트 3개만. tensions 최대 3개.`;

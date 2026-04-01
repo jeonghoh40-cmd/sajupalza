@@ -40,7 +40,7 @@ function getClient(): Anthropic {
 async function callApi(client: Anthropic, model: string, userPrompt: string): Promise<string> {
   const stream = client.messages.stream({
     model,
-    max_tokens: 8000,
+    max_tokens: 10000,
     temperature: 0,
     system: SYSTEM_PROMPT,
     messages: [{ role: "user", content: userPrompt }],
@@ -67,7 +67,7 @@ export async function analyzeDestinyStreaming(
     try {
       const stream = client.messages.stream({
         model,
-        max_tokens: 8000,
+        max_tokens: 10000,
         temperature: 0,
         system: SYSTEM_PROMPT,
         messages: [{ role: "user", content: userPrompt }],
