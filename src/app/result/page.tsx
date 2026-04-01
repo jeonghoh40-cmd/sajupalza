@@ -2,12 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import dynamic from "next/dynamic";
 import type { AnalysisResponse } from "@/lib/types";
-
-const RadarChart = dynamic(() => import("@/components/RadarChart"), {
-  ssr: false,
-});
 
 export default function ResultPage() {
   const router = useRouter();
@@ -81,22 +76,6 @@ export default function ResultPage() {
                 {trait}
               </span>
             ))}
-          </div>
-
-          {/* 대표 오행 */}
-          <div className="text-center mb-4">
-            <span
-              className="inline-block w-3 h-3 rounded-full mr-1"
-              style={{ backgroundColor: card.dominantColor }}
-            />
-            <span className="text-sm text-[var(--muted)]">
-              대표 오행: {card.element}
-            </span>
-          </div>
-
-          {/* 레이더 차트 */}
-          <div className="mb-6">
-            <RadarChart traits={crossCheck.unifiedTraits} color={card.dominantColor} />
           </div>
 
           {/* 강점 / 약점 */}
