@@ -14,6 +14,7 @@ const MBTI_TYPES = [
 export default function Home() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [error, setError] = useState("");
 
   const [form, setForm] = useState({
@@ -38,6 +39,7 @@ export default function Home() {
     }
 
     setLoading(true);
+    setProgress(0);
 
     try {
       const birthDate = `${form.birthYear}-${form.birthMonth.padStart(2, "0")}-${form.birthDay.padStart(2, "0")}`;
@@ -59,12 +61,47 @@ export default function Home() {
       });
 
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "분석에 실패했습니다.");
+        const text = await res.text();
+        try {
+          const data = JSON.parse(text);
+          throw new Error(data.error || "분석에 실패했습니다.");
+        } catch {
+          throw new Error("분석에 실패했습니다.");
+        }
       }
 
-      const result = await res.json();
-      sessionStorage.setItem("analysisResult", JSON.stringify(result));
+      const reader = res.body?.getReader();
+      if (!reader) throw new Error("스트리밍을 지원하지 않습니다.");
+
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let finalResult = null;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          const data = line.replace(/^data: /, "").trim();
+          if (!data) continue;
+          try {
+            const parsed = JSON.parse(data);
+            if (parsed.progress !== undefined) setProgress(parsed.progress);
+            if (parsed.done && parsed.result) finalResult = parsed.result;
+            if (parsed.error) throw new Error(parsed.error);
+          } catch (e) {
+            if (e instanceof Error && e.message !== data) throw e;
+          }
+        }
+      }
+
+      if (!finalResult) throw new Error("분석 결과를 받지 못했습니다.");
+
+      sessionStorage.setItem("analysisResult", JSON.stringify(finalResult));
       sessionStorage.setItem(
         "analysisInput",
         JSON.stringify({
@@ -80,6 +117,7 @@ export default function Home() {
       setError(err instanceof Error ? err.message : "오류가 발생했습니다.");
     } finally {
       setLoading(false);
+      setProgress(0);
     }
   };
 
@@ -266,7 +304,7 @@ export default function Home() {
         </div>
       </div>
 
-      {loading && <LoadingOverlay />}
+      {loading && <LoadingOverlay progress={progress} />}
     </main>
   );
 }
@@ -280,33 +318,25 @@ function LoadingSpinner() {
   );
 }
 
-function LoadingOverlay() {
-  const steps = [
-    "사주팔자를 풀어보고 있습니다...",
-    "자미두수 명반을 배치하고 있습니다...",
-    "수비학 운명수를 계산하고 있습니다...",
-    "네 가지 운명을 교차검증하고 있습니다...",
-  ];
-
-  const [step, setStep] = useState(0);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setStep((prev) => (prev + 1) % steps.length);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, []);
+function LoadingOverlay({ progress }: { progress: number }) {
+  const stepLabel =
+    progress < 20 ? "사주팔자를 풀어보고 있습니다..." :
+    progress < 40 ? "자미두수 명반을 배치하고 있습니다..." :
+    progress < 60 ? "수비학 운명수를 계산하고 있습니다..." :
+    progress < 80 ? "네 가지 운명을 교차검증하고 있습니다..." :
+    progress < 98 ? "캐릭터카드를 생성하고 있습니다..." :
+    "거의 완료되었습니다!";
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-[var(--surface)] rounded-2xl p-6 sm:p-8 max-w-sm w-full text-center border border-[var(--border)]">
         <div className="text-5xl mb-4 animate-pulse">🔮</div>
-        <p className="text-lg font-semibold mb-2">분석 중</p>
-        <p className="text-[var(--muted)] text-sm animate-pulse">{steps[step]}</p>
+        <p className="text-lg font-semibold mb-2">분석 중 {progress > 0 ? `${progress}%` : ""}</p>
+        <p className="text-[var(--muted)] text-sm">{stepLabel}</p>
         <div className="mt-4 w-full bg-[var(--surface-light)] rounded-full h-1.5 overflow-hidden">
           <div
-            className="h-full bg-gradient-to-r from-purple-600 to-pink-600 rounded-full transition-all duration-1000"
-            style={{ width: `${((step + 1) / steps.length) * 100}%` }}
+            className="h-full bg-gradient-to-r from-purple-600 to-pink-600 rounded-full transition-all duration-300"
+            style={{ width: `${Math.max(progress, 2)}%` }}
           />
         </div>
       </div>
