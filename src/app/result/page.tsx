@@ -23,7 +23,7 @@ export default function ResultPage() {
 
   if (!result) return null;
 
-  const { characterCard: card, crossCheck, saju, ziwei, numerology, mbti, yearlyFortune, monthlyGuide } = result;
+  const { characterCard: card, crossCheck, saju, ziwei, numerology, mbti, yearlyFortune, monthlyGuide, lifeForecast } = result;
 
   const toggleSection = (section: string) => {
     setOpenSection(openSection === section ? null : section);
@@ -463,6 +463,174 @@ export default function ResultPage() {
                 ))}
               </div>
             </div>
+          </div>
+        )}
+
+        {/* 미래 심층 분석 */}
+        {lifeForecast && (
+          <div className="mt-4 space-y-3">
+            {/* 인생 전환점 */}
+            {lifeForecast.lifeTurningPoints && lifeForecast.lifeTurningPoints.length > 0 && (
+              <div className="bg-[var(--surface)] rounded-2xl p-5 border border-[var(--border)]">
+                <h3 className="text-base font-semibold mb-1 flex items-center gap-2">
+                  <span>⚡</span> 인생 전환점
+                </h3>
+                <p className="text-xs text-[var(--muted)] mb-4">
+                  대운 전환·합충 기반 주요 변곡점
+                </p>
+                <div className="space-y-2.5">
+                  {lifeForecast.lifeTurningPoints.map((tp, i) => {
+                    const typeConfig = {
+                      career: { icon: "💼", label: "직업/진로", color: "text-blue-400" },
+                      relationship: { icon: "💕", label: "인연/관계", color: "text-pink-400" },
+                      wealth: { icon: "💰", label: "재물/투자", color: "text-yellow-400" },
+                      health: { icon: "🏥", label: "건강", color: "text-green-400" },
+                      growth: { icon: "🌱", label: "성장/도약", color: "text-emerald-400" },
+                      crisis: { icon: "🌊", label: "시련/전환", color: "text-orange-400" },
+                    };
+                    const cfg = typeConfig[tp.type] || typeConfig.growth;
+                    return (
+                      <div
+                        key={i}
+                        className="p-3 rounded-xl bg-[var(--surface-light)] border border-[var(--border)]"
+                      >
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-sm">{cfg.icon}</span>
+                          <span className="text-xs font-bold text-purple-400">{tp.age}</span>
+                          <span className="text-xs text-[var(--muted)]">({tp.period})</span>
+                          <span className={`text-xs font-medium ${cfg.color}`}>{cfg.label}</span>
+                        </div>
+                        <p className="text-xs text-[var(--muted)]">{tp.description}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* 신살 분석 */}
+            {lifeForecast.specialStars && lifeForecast.specialStars.length > 0 && (
+              <div className="bg-[var(--surface)] rounded-2xl p-5 border border-[var(--border)]">
+                <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                  <span>✨</span> 신살 분석 (神殺)
+                </h3>
+                <div className="space-y-2">
+                  {lifeForecast.specialStars.map((star, i) => (
+                    <div
+                      key={i}
+                      className="flex items-start gap-3 p-2.5 rounded-lg bg-[var(--surface-light)] border border-[var(--border)]"
+                    >
+                      <span className="text-sm mt-0.5">{star.isPositive ? "🔹" : "🔸"}</span>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <span className="text-xs font-semibold">{star.name}</span>
+                          <span className="text-xs text-[var(--muted)]">{star.position}</span>
+                          <span className={`text-xs px-1.5 py-0.5 rounded ${star.isPositive ? "bg-blue-900/30 text-blue-300" : "bg-orange-900/30 text-orange-300"}`}>
+                            {star.isPositive ? "길신" : "흉신"}
+                          </span>
+                        </div>
+                        <p className="text-xs text-[var(--muted)]">{star.effect}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 행운 요소 & 적성/직업 */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* 행운 요소 */}
+              {lifeForecast.luckyElements && (
+                <div className="bg-[var(--surface)] rounded-2xl p-5 border border-[var(--border)]">
+                  <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                    <span>🍀</span> 행운 요소
+                  </h3>
+                  <div className="space-y-2">
+                    {[
+                      { label: "행운 색상", value: lifeForecast.luckyElements.color, icon: "🎨" },
+                      { label: "행운 숫자", value: String(lifeForecast.luckyElements.number), icon: "🔢" },
+                      { label: "행운 방위", value: lifeForecast.luckyElements.direction, icon: "🧭" },
+                      { label: "행운 계절", value: lifeForecast.luckyElements.season, icon: "🌿" },
+                      { label: "좋은 날", value: lifeForecast.luckyElements.day, icon: "📅" },
+                    ].map((item) => (
+                      <div key={item.label} className="flex items-center justify-between text-xs">
+                        <span className="text-[var(--muted)] flex items-center gap-1.5">
+                          <span>{item.icon}</span> {item.label}
+                        </span>
+                        <span className="font-medium">{item.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 건강 주의 */}
+              {lifeForecast.healthWarning && (
+                <div className="bg-[var(--surface)] rounded-2xl p-5 border border-[var(--border)]">
+                  <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                    <span>🏥</span> 건강 체질 분석
+                  </h3>
+                  <div className="space-y-2 text-xs">
+                    <div>
+                      <span className="text-orange-400 font-medium">주의 부위: </span>
+                      <span className="text-[var(--muted)]">{lifeForecast.healthWarning.weakOrgans.join(", ")}</span>
+                    </div>
+                    <div>
+                      <span className="text-green-400 font-medium">강한 부위: </span>
+                      <span className="text-[var(--muted)]">{lifeForecast.healthWarning.strongOrgans.join(", ")}</span>
+                    </div>
+                    <div>
+                      <span className="text-[var(--muted)] font-medium">부족 오행: </span>
+                      <span className="text-purple-400">{lifeForecast.healthWarning.element}</span>
+                    </div>
+                    <p className="text-[var(--muted)] mt-1 pt-2 border-t border-[var(--border)]">
+                      {lifeForecast.healthWarning.advice}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* 적성/직업 추천 */}
+            {lifeForecast.careerAptitude && (
+              <div className="bg-[var(--surface)] rounded-2xl p-5 border border-[var(--border)]">
+                <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                  <span>🎯</span> 적성 & 직업 추천
+                </h3>
+                <div className="space-y-3 text-xs">
+                  <div>
+                    <div className="text-green-400 font-medium mb-1.5">추천 분야</div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {lifeForecast.careerAptitude.bestFields.map((f) => (
+                        <span key={f} className="px-2.5 py-1 rounded-full bg-green-900/20 text-green-300 border border-green-800/30">
+                          {f}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-orange-400 font-medium mb-1.5">비추천 분야</div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {lifeForecast.careerAptitude.avoidFields.map((f) => (
+                        <span key={f} className="px-2.5 py-1 rounded-full bg-orange-900/20 text-orange-300 border border-orange-800/30">
+                          {f}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="pt-2 border-t border-[var(--border)] space-y-1.5">
+                    <div>
+                      <span className="text-[var(--muted)] font-medium">업무 스타일: </span>
+                      <span className="text-[var(--foreground)]">{lifeForecast.careerAptitude.workStyle}</span>
+                    </div>
+                    <div>
+                      <span className="text-[var(--muted)] font-medium">리더십 유형: </span>
+                      <span className="text-[var(--foreground)]">{lifeForecast.careerAptitude.leadershipType}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 

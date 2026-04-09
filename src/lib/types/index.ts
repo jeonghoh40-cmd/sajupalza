@@ -176,6 +176,52 @@ export interface CharacterCard {
   compatibleTypes: string[];
 }
 
+// === 미래 심층 분석 ===
+
+export interface LifeTurningPoint {
+  age: string;           // "35~36세"
+  period: string;        // "2002~2003년"
+  type: "career" | "relationship" | "wealth" | "health" | "growth" | "crisis";
+  description: string;   // 2문장 이내
+}
+
+export interface SpecialStar {
+  name: string;          // "역마살(驛馬殺)"
+  position: string;      // "년지" / "일지" 등
+  effect: string;        // 1~2문장 해석
+  isPositive: boolean;   // 길신/흉신 여부
+}
+
+export interface LuckyElements {
+  color: string;         // "청색(파랑)"
+  number: number;        // 행운 숫자
+  direction: string;     // "동쪽"
+  season: string;        // "봄"
+  day: string;           // "갑일(甲日), 을일(乙日)"
+}
+
+export interface CareerAptitude {
+  bestFields: string[];      // 적합 분야 3~5개
+  avoidFields: string[];     // 비추천 분야 2~3개
+  workStyle: string;         // 업무 스타일 1문장
+  leadershipType: string;    // 리더십 유형 1문장
+}
+
+export interface HealthWarning {
+  weakOrgans: string[];      // 취약 장기/부위 2~3개
+  strongOrgans: string[];    // 강한 장기/부위 1~2개
+  advice: string;            // 건강 조언 2문장
+  element: string;           // 부족한 오행
+}
+
+export interface LifeForecast {
+  lifeTurningPoints: LifeTurningPoint[];  // 인생 전환점 3~5개
+  specialStars: SpecialStar[];            // 신살 3~5개
+  luckyElements: LuckyElements;           // 행운 요소
+  careerAptitude: CareerAptitude;         // 적성/직업
+  healthWarning: HealthWarning;           // 건강 주의
+}
+
 export interface AnalysisResponse {
   saju: SajuResult;
   ziwei: ZiweiResult;
@@ -184,5 +230,6 @@ export interface AnalysisResponse {
   crossCheck: CrossCheckResult;
   characterCard: CharacterCard;
   yearlyFortune: YearlyFortune;
-  monthlyGuide: MonthlyGuide[];  // 향후 6개월 행동 가이드
+  monthlyGuide: MonthlyGuide[];      // 향후 6개월 행동 가이드
+  lifeForecast?: LifeForecast;       // 미래 심층 분석
 }
