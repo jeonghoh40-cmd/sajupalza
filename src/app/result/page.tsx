@@ -177,14 +177,33 @@ export default function ResultPage() {
                 </div>
               ))}
             </div>
-            <div className="space-y-2 text-sm">
-              <div><span className="text-[var(--muted)]">일간:</span> {saju.dayMaster}</div>
-              <div><span className="text-[var(--muted)]">용신:</span> {saju.usefulGod}</div>
-              <div>
-                <span className="text-[var(--muted)]">오행 분포:</span>{" "}
-                목{saju.fiveElements.wood} 화{saju.fiveElements.fire} 토{saju.fiveElements.earth} 금{saju.fiveElements.metal} 수{saju.fiveElements.water}
+            <div className="space-y-3 text-sm">
+              <div className="p-3 rounded-lg bg-[var(--surface-light)] border border-[var(--border)]">
+                <div className="text-xs text-purple-400 font-medium mb-1">일간 (Day Master)</div>
+                <p className="text-sm text-[var(--foreground)]">{saju.dayMaster}</p>
               </div>
-              <p className="text-[var(--muted)] mt-2">{saju.summary}</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <span className="text-[var(--muted)] text-xs">용신:</span>
+                  <span className="text-sm font-medium ml-1">{saju.usefulGod}</span>
+                </div>
+                <div>
+                  <span className="text-[var(--muted)] text-xs">오행:</span>
+                  <span className="text-xs ml-1">
+                    목{saju.fiveElements.wood} 화{saju.fiveElements.fire} 토{saju.fiveElements.earth} 금{saju.fiveElements.metal} 수{saju.fiveElements.water}
+                  </span>
+                </div>
+              </div>
+              {saju.relations && saju.relations.length > 0 && (
+                <div>
+                  <span className="text-[var(--muted)] text-xs">합충 관계:</span>
+                  <span className="text-xs ml-1">{saju.relations.join(", ")}</span>
+                </div>
+              )}
+              <div className="p-3 rounded-lg bg-[var(--surface-light)] border border-[var(--border)]">
+                <div className="text-xs text-purple-400 font-medium mb-1">사주 해석</div>
+                <p className="text-sm text-[var(--foreground)] leading-relaxed">{saju.summary}</p>
+              </div>
             </div>
           </AccordionSection>
 
@@ -258,20 +277,6 @@ export default function ResultPage() {
               <div>
                 <span className="text-[var(--muted)]">인지기능:</span>{" "}
                 {mbti.cognitiveStack?.join(" → ") ?? "-"}
-              </div>
-              <div className="grid grid-cols-2 gap-3 mt-2">
-                <div>
-                  <div className="text-green-400 text-xs font-medium mb-1">강점</div>
-                  {(mbti.strengths ?? []).map((s) => (
-                    <div key={s} className="text-xs">· {s}</div>
-                  ))}
-                </div>
-                <div>
-                  <div className="text-orange-400 text-xs font-medium mb-1">약점</div>
-                  {(mbti.weaknesses ?? []).map((w) => (
-                    <div key={w} className="text-xs">· {w}</div>
-                  ))}
-                </div>
               </div>
               <p className="text-[var(--muted)] mt-2">{mbti.summary}</p>
             </div>

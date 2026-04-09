@@ -23,8 +23,11 @@ export const SYSTEM_PROMPT = `당신은 사주팔자·자미두수·수비학·M
 
 ## 출력 규칙
 - **반드시 JSON만 출력. 다른 텍스트 금지.**
-- **기본 summary/reading/description/advice는 1문장(30자 이내)으로.**
-- **단, career(직업운)와 wealth(재물운)의 summary와 advice는 2~3문장으로 상세히 작성.**
+- **사주(saju)의 summary는 3~4문장으로 일간·오행·용신·합충 관계를 풀어서 상세히 해석.**
+- **사주 dayMaster는 일간의 성격과 기질을 2문장으로 설명.**
+- **사주 daeun의 각 summary도 2문장으로 해당 대운의 특징을 구체적으로 서술.**
+- **기타 summary/reading/description/advice는 1~2문장으로.**
+- **career(직업운)와 wealth(재물운)의 summary와 advice는 2~3문장으로 상세히 작성.**
 - **키 이름과 구조를 정확히 지키세요.**
 
 \`\`\`json

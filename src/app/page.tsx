@@ -129,7 +129,7 @@ export default function Home() {
           사주팔자
         </h1>
         <p className="text-[var(--muted)] text-sm">
-          4개의 도시가 당신을 분석합니다
+          4개의 도사가 당신을 분석합니다
         </p>
         <p className="text-[var(--muted)] text-xs mt-1 px-4">
           사주 · 자미두수 · 수비학 · MBTI 교차검증으로 당신만의 운명 캐릭터카드를 만들어 드립니다
