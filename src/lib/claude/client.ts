@@ -15,14 +15,14 @@ const MODELS = [
 let cachedAccessToken: string | null = null;
 let cachedExpiresAt = 0;
 
-const OAUTH_TOKEN_URL = "https://platform.claude.com/v1/oauth/token";
-const OAUTH_CLIENT_ID = "https://claude.ai/oauth/claude-code-client-metadata";
+const OAUTH_TOKEN_URL = "https://console.anthropic.com/v1/oauth/token";
+const OAUTH_CLIENT_ID = "9d1c250a-e61b-44d9-88ed-5944d1962f5e";
 
 async function refreshOAuthToken(refreshToken: string): Promise<string> {
   const res = await fetch(OAUTH_TOKEN_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
       grant_type: "refresh_token",
       refresh_token: refreshToken,
       client_id: OAUTH_CLIENT_ID,
