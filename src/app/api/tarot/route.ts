@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import { getClient } from "@/lib/claude/client";
 import { TAROT_DECK, SPREAD_POSITIONS } from "@/lib/tarot/deck";
 
 const MODELS = ["claude-haiku-4-5-20251001", "claude-sonnet-4-6"] as const;
@@ -85,14 +85,7 @@ ${cardsInfo}
 
 위 5장의 타로카드로 사용자의 질문에 대한 깊이 있는 해석을 JSON으로 출력하세요.`;
 
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) {
-      return new Response(JSON.stringify({ error: "API 키 미설정" }), {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      });
-    }
-    const client = new Anthropic({ apiKey });
+    const client = await getClient();
 
     let lastError: Error | null = null;
     for (const model of MODELS) {
