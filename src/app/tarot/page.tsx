@@ -63,6 +63,23 @@ export default function TarotPage() {
 
   const handleStartReveal = async () => {
     if (selectedIds.length !== 5) return;
+
+    // 카드 이미지 사전 로드 (플립 시 즉시 보이도록)
+    const preloadCards = selectedIds
+      .map((id) => TAROT_DECK.find((c) => c.id === id))
+      .filter((c): c is TarotCard => !!c);
+    await Promise.all(
+      preloadCards.map(
+        (c) =>
+          new Promise<void>((resolve) => {
+            const img = new Image();
+            img.onload = () => resolve();
+            img.onerror = () => resolve();
+            img.src = c.image;
+          })
+      )
+    );
+
     setPhase("reveal");
     setRevealedCount(0);
 
@@ -272,18 +289,11 @@ export default function TarotPage() {
                     <div className="text-xs text-purple-400 mb-1.5 font-medium">
                       {pos.label}
                     </div>
-                    <div
-                      className="relative w-full aspect-[2/3] rounded-md transition-all duration-700"
-                      style={{
-                        transformStyle: "preserve-3d",
-                        transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)",
-                      }}
-                    >
+                    <div className="relative w-full aspect-[2/3] rounded-md">
                       {/* 뒷면 */}
                       <div
-                        className="absolute inset-0 rounded-md border-2 border-purple-900/50 flex items-center justify-center text-purple-300/40"
+                        className={`absolute inset-0 rounded-md border-2 border-purple-900/50 flex items-center justify-center text-purple-300/40 transition-opacity duration-500 ${flipped ? "opacity-0" : "opacity-100"}`}
                         style={{
-                          backfaceVisibility: "hidden",
                           background:
                             "linear-gradient(135deg, #1e1b4b 0%, #4c1d95 50%, #1e1b4b 100%)",
                         }}
@@ -292,17 +302,17 @@ export default function TarotPage() {
                       </div>
                       {/* 앞면 */}
                       <div
-                        className="absolute inset-0 rounded-md border-2 border-purple-400 overflow-hidden bg-amber-50"
-                        style={{
-                          backfaceVisibility: "hidden",
-                          transform: "rotateY(180deg)",
-                        }}
+                        className={`absolute inset-0 rounded-md border-2 border-purple-400 overflow-hidden bg-amber-50 transition-all duration-500 ${flipped ? "opacity-100 scale-100" : "opacity-0 scale-90"}`}
                       >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={card.image}
                           alt={card.name.ko}
                           className="w-full h-full object-cover"
+                          loading="eager"
+                          onError={(e) => {
+                            (e.currentTarget as HTMLImageElement).style.display = "none";
+                          }}
                         />
                         <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[9px] font-bold text-center py-0.5 leading-tight">
                           {card.name.ko}
