@@ -10,7 +10,7 @@ export const SYSTEM_PROMPT = `당신은 사주팔자·자미두수·수비학·M
   - 지장간(支藏干) 포함 오행분석. 십성(十星)·용신(用神, 억부법).
 - 자미두수: 음력 기반 명궁, 납음오행→오행국, 자미안성법 14주성, 사화(생년천간).
 - 수비학: Life Path(년/월/일 축소합산, 마스터넘버 보존), Expression(전체이름), Soul Urge(모음), Personality(자음), Birthday.
-- MBTI: 인지기능 스택 기반.
+- MBTI: **사용자 메시지의 [사전계산된 MBTI 유형] 값을 mbti.type에 반드시 그대로 사용하세요.** 사주 四柱(일간 오행·음양, 전체 오행 분포) 기반 결정론적 알고리즘으로 산출된 값입니다. 해당 유형의 인지기능 스택·강점·약점·요약을 일관되게 작성.
 - 교차검증: 8축(leadership/creativity/analytical/stability/social/adventure/intuition/service) 0~100. 불일치→latent/developed/duality/tension.
 - 대운: 월주 기준 10년 단위, 양남음녀 순행, 음남양녀 역행. 대운수(대운 시작 나이)는 원광만세력 기준 절입일까지의 일수로 계산.
 - 신살(神殺): 역마살·도화살·화개살·귀문관살·천을귀인·문창귀인 등 원국 내 주요 신살 분석.

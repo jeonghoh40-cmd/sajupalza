@@ -1,5 +1,6 @@
 import { BIRTH_HOURS, type AnalysisInput } from "@/lib/types";
 import { calculateFourPillars, formatPillarsForPrompt } from "@/lib/saju/calculator";
+import { calculateMbtiFromPillars, formatMbtiForPrompt } from "@/lib/saju/mbti";
 
 export function buildUserPrompt(input: AnalysisInput): string {
   const hourInfo = BIRTH_HOURS.find((h) => {
@@ -29,9 +30,16 @@ export function buildUserPrompt(input: AnalysisInput): string {
   const pillars = calculateFourPillars(y, m, d, input.birthHour);
   const pillarsInfo = formatPillarsForPrompt(pillars);
 
-  return `${input.birthDate}(${calendarLabel})${lunarNote} ${input.birthHour}시(${hourInfo.label}) ${input.gender === "male" ? "남" : "여"} ${input.koreanName}${input.englishName ? ` ${input.englishName}` : ""} MBTI:${input.mbtiType || "추정"} 오늘날짜:${todayStr} 만나이:${age}세 한국나이:${age + 1}세 ${currentYear}년 운세 포함. monthlyGuide는 ${currentYear}년 ${currentMonth}월부터 6개월.
+  // MBTI 사전 계산 (사용자가 지정하지 않은 경우 사주 기반 결정론적 산출)
+  const mbtiCalc = calculateMbtiFromPillars(pillars);
+  const lockedMbti = input.mbtiType || mbtiCalc.type;
+  const mbtiInfo = formatMbtiForPrompt({ ...mbtiCalc, type: lockedMbti });
+
+  return `${input.birthDate}(${calendarLabel})${lunarNote} ${input.birthHour}시(${hourInfo.label}) ${input.gender === "male" ? "남" : "여"} ${input.koreanName}${input.englishName ? ` ${input.englishName}` : ""} 오늘날짜:${todayStr} 만나이:${age}세 한국나이:${age + 1}세 ${currentYear}년 운세 포함. monthlyGuide는 ${currentYear}년 ${currentMonth}월부터 6개월.
 
 ${pillarsInfo}
 
-위 사주 四柱는 원광만세력 기준으로 정확히 계산된 값입니다. fourPillars 출력 시 반드시 위 값을 그대로 사용하세요. JSON만 출력.`;
+${mbtiInfo}
+
+위 사주 四柱와 MBTI는 결정론적 알고리즘으로 산출된 값입니다. fourPillars와 mbti.type은 반드시 위 값을 그대로 사용하세요. JSON만 출력.`;
 }
