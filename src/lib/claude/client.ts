@@ -91,7 +91,16 @@ export async function getAccessToken(): Promise<{ token: string; isOAuth: boolea
 export async function getClient(): Promise<Anthropic> {
   const { token, isOAuth } = await getAccessToken();
   if (isOAuth) {
-    return new Anthropic({ authToken: token, apiKey: undefined });
+    // Claude Max OAuth 토큰은 베타 헤더와 Claude Code user-agent가 필요
+    return new Anthropic({
+      authToken: token,
+      apiKey: undefined,
+      defaultHeaders: {
+        "anthropic-beta": "oauth-2025-04-20",
+        "anthropic-version": "2023-06-01",
+        "User-Agent": "claude-cli/1.0.0 (external, cli)",
+      },
+    });
   }
   return new Anthropic({ apiKey: token });
 }
