@@ -107,14 +107,41 @@ ${cardsInfo}
         // JSON 추출
         let jsonStr = text;
         const jsonMatch = text.match(/```json\s*([\s\S]*?)\s*```/);
-        if (jsonMatch) jsonStr = jsonMatch[1];
-        else {
+        if (jsonMatch) {
+          jsonStr = jsonMatch[1];
+        } else {
           const start = text.indexOf("{");
           const end = text.lastIndexOf("}");
-          if (start !== -1 && end !== -1) jsonStr = text.slice(start, end + 1);
+          if (start !== -1 && end !== -1 && end > start) {
+            jsonStr = text.slice(start, end + 1);
+          } else {
+            throw new Error("AI 응답에서 JSON을 찾을 수 없습니다. 응답: " + text.substring(0, 100));
+          }
         }
 
-        const result = JSON.parse(jsonStr) as TarotResponse;
+        // JSON 파싱 전 기본 검증
+        jsonStr = jsonStr.trim();
+        if (!jsonStr.startsWith("{") || !jsonStr.endsWith("}")) {
+          throw new Error("유효하지 않은 JSON 형식: " + jsonStr.substring(0, 100));
+        }
+
+        let result: TarotResponse;
+        try {
+          result = JSON.parse(jsonStr) as TarotResponse;
+        } catch (parseError) {
+          throw new Error(
+            `JSON 파싱 실패: ${(parseError as Error).message}. 원본: ${jsonStr.substring(0, 200)}`
+          );
+        }
+
+        // 필수 필드 검증
+        if (!result.cards || !Array.isArray(result.cards) || result.cards.length !== 5) {
+          throw new Error("응답에 5장의 카드 해석이 포함되어야 합니다");
+        }
+        if (!result.overallTheme || !result.synthesis || !result.advice) {
+          throw new Error("응답에 필수 필드(overallTheme, synthesis, advice)가 누락되었습니다");
+        }
+
         return new Response(JSON.stringify(result), {
           headers: { "Content-Type": "application/json" },
         });
