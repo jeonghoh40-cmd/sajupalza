@@ -141,6 +141,18 @@ export default function Home() {
         🔮
       </div>
 
+      {/* 타로 진입 버튼 */}
+      <div className="w-full max-w-md mb-4">
+        <button
+          onClick={() => router.push("/tarot")}
+          className="w-full py-3 rounded-xl text-sm font-semibold bg-gradient-to-r from-amber-600 via-pink-600 to-purple-600 text-white hover:opacity-90 transition-opacity flex items-center justify-center gap-2 shadow-lg shadow-purple-900/30"
+        >
+          <span className="text-lg">🃏</span>
+          <span>지금 마음 속 질문을 타로로 묻기</span>
+          <span className="text-xs opacity-80">→</span>
+        </button>
+      </div>
+
       {/* 폼 카드 */}
       <div className="w-full max-w-md">
         <div className="bg-[var(--surface)] rounded-2xl p-5 sm:p-6 border border-[var(--border)] shadow-xl">
