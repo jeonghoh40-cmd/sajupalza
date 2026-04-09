@@ -94,7 +94,13 @@ ${cardsInfo}
           model,
           max_tokens: 4000,
           temperature: 0.7,
-          system: SYSTEM_PROMPT,
+          system: [
+            {
+              type: "text",
+              text: SYSTEM_PROMPT,
+              cache_control: { type: "ephemeral" },
+            },
+          ],
           messages: [{ role: "user", content: userPrompt }],
         });
 

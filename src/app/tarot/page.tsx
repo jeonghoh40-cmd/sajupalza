@@ -292,16 +292,19 @@ export default function TarotPage() {
                       </div>
                       {/* 앞면 */}
                       <div
-                        className="absolute inset-0 rounded-md border-2 border-purple-400 flex flex-col items-center justify-center p-1 text-center"
+                        className="absolute inset-0 rounded-md border-2 border-purple-400 overflow-hidden bg-amber-50"
                         style={{
                           backfaceVisibility: "hidden",
                           transform: "rotateY(180deg)",
-                          background:
-                            "linear-gradient(135deg, #fef3c7 0%, #fde68a 50%, #fbbf24 100%)",
-                          color: "#1e1b4b",
                         }}
                       >
-                        <div className="text-[10px] font-bold leading-tight">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={card.image}
+                          alt={card.name.ko}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[9px] font-bold text-center py-0.5 leading-tight">
                           {card.name.ko}
                         </div>
                       </div>
@@ -351,17 +354,15 @@ export default function TarotPage() {
                       className="flex gap-3 p-3 rounded-xl bg-[var(--surface-light)] border border-[var(--border)]"
                     >
                       {/* 카드 미니 이미지 */}
-                      <div
-                        className="w-14 h-20 flex-shrink-0 rounded-md border border-purple-400 flex items-center justify-center p-1 text-center"
-                        style={{
-                          background:
-                            "linear-gradient(135deg, #fef3c7 0%, #fbbf24 100%)",
-                          color: "#1e1b4b",
-                        }}
-                      >
-                        <div className="text-[9px] font-bold leading-tight">
-                          {cardData?.name.ko}
-                        </div>
+                      <div className="w-14 h-20 flex-shrink-0 rounded-md border border-purple-400 overflow-hidden bg-amber-50">
+                        {cardData && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={cardData.image}
+                            alt={cardData.name.ko}
+                            className="w-full h-full object-cover"
+                          />
+                        )}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">

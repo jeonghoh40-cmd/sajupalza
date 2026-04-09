@@ -47,7 +47,13 @@ export async function getAccessToken(): Promise<{ token: string; isOAuth: boolea
     return { token: process.env.ANTHROPIC_API_KEY, isOAuth: false };
   }
 
-  // 2. OAuth refresh token으로 자동 갱신
+  // 2. 직접 OAuth access token (sk-ant-oat) → refresh 없이 바로 사용
+  //    회전 문제 회피용. 만료 시(약 8시간 후) 수동 재동기화 필요.
+  if (process.env.CLAUDE_OAUTH_TOKEN?.startsWith("sk-ant-oat")) {
+    return { token: process.env.CLAUDE_OAUTH_TOKEN, isOAuth: true };
+  }
+
+  // 3. OAuth refresh token으로 자동 갱신 (회전 발생)
   const refreshToken = process.env.OAUTH_REFRESH_TOKEN;
   if (refreshToken) {
     if (cachedAccessToken && Date.now() < cachedExpiresAt) {
@@ -57,7 +63,7 @@ export async function getAccessToken(): Promise<{ token: string; isOAuth: boolea
     return { token, isOAuth: true };
   }
 
-  // 3. 환경변수의 OAuth access token (갱신 불가, 폴백)
+  // 4. 환경변수의 OAuth access token (legacy fallback)
   if (process.env.ANTHROPIC_API_KEY) {
     return { token: process.env.ANTHROPIC_API_KEY, isOAuth: true };
   }
@@ -119,7 +125,14 @@ export async function analyzeDestinyStreaming(
         model,
         max_tokens: 16000,
         temperature: 0,
-        system: SYSTEM_PROMPT,
+        // 시스템 프롬프트 캐싱: 큰 도메인 지식을 5분간 캐시 → 후속 호출 30~50% 빨라짐
+        system: [
+          {
+            type: "text",
+            text: SYSTEM_PROMPT,
+            cache_control: { type: "ephemeral" },
+          },
+        ],
         messages: [{ role: "user", content: userPrompt }],
       });
 
@@ -162,7 +175,13 @@ export async function analyzeDestiny(
         model,
         max_tokens: 16000,
         temperature: 0,
-        system: SYSTEM_PROMPT,
+        system: [
+          {
+            type: "text",
+            text: SYSTEM_PROMPT,
+            cache_control: { type: "ephemeral" },
+          },
+        ],
         messages: [{ role: "user", content: userPrompt }],
       });
 

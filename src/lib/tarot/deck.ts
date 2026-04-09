@@ -13,10 +13,11 @@ export interface TarotCard {
   number?: number | string; // 1-10 또는 Page/Knight/Queen/King
   keywords: string[];
   meaning: string; // 정방향 의미 (1문장)
+  image: string;   // /tarot/{id}.jpg
 }
 
 // ── 메이저 아르카나 (22장) ───────────────────────────
-const MAJOR: TarotCard[] = [
+const MAJOR: Omit<TarotCard, "image">[] = [
   { id: 0, name: { en: "The Fool", ko: "바보" }, arcana: "major", keywords: ["새 시작", "순수", "모험"], meaning: "미지의 세계로 향하는 순수한 출발과 자유로운 도약." },
   { id: 1, name: { en: "The Magician", ko: "마법사" }, arcana: "major", keywords: ["창조", "의지", "실행"], meaning: "의지와 자원을 결합해 무엇이든 만들어낼 수 있는 창조의 힘." },
   { id: 2, name: { en: "The High Priestess", ko: "여사제" }, arcana: "major", keywords: ["직관", "비밀", "내면"], meaning: "내면의 지혜와 무의식의 메시지에 귀 기울여야 할 시기." },
@@ -145,8 +146,8 @@ const COURT_NAMES: Record<string, string> = {
   King: "왕",
 };
 
-function buildMinor(): TarotCard[] {
-  const cards: TarotCard[] = [];
+function buildMinor(): Omit<TarotCard, "image">[] {
+  const cards: Omit<TarotCard, "image">[] = [];
   let id = 22;
   for (const suit of SUIT_DATA) {
     for (const key of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, "Page", "Knight", "Queen", "King"] as const) {
@@ -170,7 +171,11 @@ function buildMinor(): TarotCard[] {
   return cards;
 }
 
-export const TAROT_DECK: TarotCard[] = [...MAJOR, ...buildMinor()];
+// 모든 카드에 image 경로 자동 주입 (/tarot/{id}.jpg)
+export const TAROT_DECK: TarotCard[] = [...MAJOR, ...buildMinor()].map((c) => ({
+  ...c,
+  image: `/tarot/${c.id}.jpg`,
+}));
 
 /** 덱 셔플 (Fisher–Yates) */
 export function shuffleDeck<T>(deck: T[], seed?: number): T[] {
