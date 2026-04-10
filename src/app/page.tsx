@@ -21,8 +21,9 @@ export default function Home() {
     birthYear: "",
     birthMonth: "",
     birthDay: "",
-    birthHour: "6",
+    birthHour: "7",  // 기본값: 진시(07시)
     calendarType: "solar" as "solar" | "lunar",
+    isLeapMonth: false,  // 윤달 여부 (음력 선택 시만 유효)
     gender: "male" as "male" | "female",
     koreanName: "",
     englishName: "",
@@ -43,8 +44,8 @@ export default function Home() {
 
     try {
       const birthDate = `${form.birthYear}-${form.birthMonth.padStart(2, "0")}-${form.birthDay.padStart(2, "0")}`;
-      const hourIndex = parseInt(form.birthHour);
-      const birthHourNum = hourIndex === 0 ? 0 : hourIndex * 2 + 1;
+      // BIRTH_HOURS.value가 이미 대표 시각(KST 시)이므로 그대로 전달
+      const birthHourNum = parseInt(form.birthHour);
 
       const res = await fetch("/api/analyze", {
         method: "POST",
@@ -53,6 +54,7 @@ export default function Home() {
           birthDate,
           birthHour: birthHourNum,
           calendarType: form.calendarType,
+          isLeapMonth: form.calendarType === "lunar" ? form.isLeapMonth : undefined,
           gender: form.gender,
           koreanName: form.koreanName,
           englishName: form.englishName || undefined,
@@ -102,12 +104,14 @@ export default function Home() {
       if (!finalResult) throw new Error("분석 결과를 받지 못했습니다.");
 
       sessionStorage.setItem("analysisResult", JSON.stringify(finalResult));
+      const hourLabel = BIRTH_HOURS.find((h) => h.value === birthHourNum)?.label ?? "";
       sessionStorage.setItem(
         "analysisInput",
         JSON.stringify({
           birthDate,
-          birthHour: BIRTH_HOURS[hourIndex]?.label,
+          birthHour: hourLabel,
           calendarType: form.calendarType,
+          isLeapMonth: form.isLeapMonth,
           gender: form.gender,
           koreanName: form.koreanName,
         })
@@ -207,6 +211,18 @@ export default function Home() {
                   </button>
                 ))}
               </div>
+              {/* 윤달 체크박스: 음력 선택 시만 표시 */}
+              {form.calendarType === "lunar" && (
+                <label className="flex items-center gap-2 mt-1 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={form.isLeapMonth}
+                    onChange={(e) => setForm({ ...form, isLeapMonth: e.target.checked })}
+                    className="w-4 h-4 accent-purple-500"
+                  />
+                  <span className="text-sm text-[var(--muted)]">윤달 (閏月) 출생</span>
+                </label>
+              )}
               <div className="grid grid-cols-3 gap-2">
                 <input
                   type="number"

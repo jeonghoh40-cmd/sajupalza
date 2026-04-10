@@ -1,10 +1,19 @@
 /**
  * 사주 사주(四柱) 계산기
  * - 일주(日柱): 율리우스 일수(JDN) 기반 정확 계산
- * - 년주(年柱): 입춘(立春) 기준 년간지 산출
- * - 월주(月柱): 절기(節氣) 기준 월간지 산출 (연상기월법)
- * - 시주(時柱): 일상기시법(日上起時法) 기준 시간지 산출
+ * - 년주(年柱): 입춘(立春) 기준 년간지 산출 (분 단위 절기 시각 비교)
+ * - 월주(月柱): 절기(節氣) 기준 월간지 산출 (연상기월법, 분 단위 정밀)
+ * - 시주(時柱): 일상기시법(日上起時法) + 진태양시 보정
  */
+
+// ========== 진태양시(眞太陽時) 보정 ==========
+// 한국 표준시(KST, UTC+9)는 동경 135° 기준.
+// 서울 경도 ≈ 126.978° → 표준 경도 대비 -8.022° → -(8.022/15)*60 ≈ -32.1분
+// 대부분 만세력은 진태양시 보정을 적용하지 않지만, 시주(時柱) 경계 부근에서는 약 30분 차이가 남.
+// USE_TRUE_SOLAR_TIME = true: 진태양시 보정 적용 (서울 기준, 더 전통적)
+// USE_TRUE_SOLAR_TIME = false: KST 그대로 사용 (앱별로 다르므로 false를 기본값으로 유지)
+const USE_TRUE_SOLAR_TIME = false;
+const TRUE_SOLAR_TIME_OFFSET_MIN = -32; // 서울: KST 기준 -32분
 
 // 천간(天干) 10개
 const HEAVENLY_STEMS = ["갑", "을", "병", "정", "무", "기", "경", "신", "임", "계"] as const;
@@ -49,14 +58,18 @@ function toJDN(year: number, month: number, day: number): number {
 
 // ========== 태양 황경 계산 (절기 판정용) ==========
 
-/** JDN → Julian Century from J2000.0 */
-function jdnToJulianCentury(jdn: number): number {
-  return (jdn - 2451545.0) / 36525.0;
+/** JD → Julian Century from J2000.0 (JD는 분수 허용, TT 기준) */
+function jdToJulianCentury(jd: number): number {
+  return (jd - 2451545.0) / 36525.0;
 }
 
-/** 태양 황경(ecliptic longitude) 계산 (도 단위, 0~360) */
-function solarLongitude(jdn: number): number {
-  const T = jdnToJulianCentury(jdn);
+/**
+ * 태양 겉보기 황경(apparent ecliptic longitude) 계산 (도 단위, 0~360)
+ * - 입력 jd는 분수 JD (UT 기준, TT-UT 차는 수 초 ~ 수십 초로 절기 판정에 무시 가능)
+ * - 정확도 약 0.01° (≈15분의 태양 운동량)
+ */
+function solarLongitude(jd: number): number {
+  const T = jdToJulianCentury(jd);
   // 평균 황경
   const L0 = 280.46646 + 36000.76983 * T + 0.0003032 * T * T;
   // 평균 근점이각
@@ -74,30 +87,61 @@ function solarLongitude(jdn: number): number {
 }
 
 /**
- * 특정 연도에서 태양 황경이 targetLng도가 되는 JDN을 찾는다.
- * (이분법으로 1일 이내 정확도)
+ * 목표 황경과의 부호 있는 차이 (−180°~+180°).
+ * 0을 기준으로 음수면 "아직 도달 안 함", 양수면 "이미 지났음".
  */
-function findSolarTermJDN(year: number, targetLng: number, searchStartMonth: number): number {
-  // 검색 시작일
-  let jdn = toJDN(year, searchStartMonth, 1);
-  // 대략 60일 범위에서 탐색
-  const endJdn = jdn + 60;
+function lngDiff(jd: number, targetLng: number): number {
+  let d = solarLongitude(jd) - targetLng;
+  while (d > 180) d -= 360;
+  while (d < -180) d += 360;
+  return d;
+}
 
-  // 먼저 대략적 위치 찾기 (1일 단위)
-  let prevLng = solarLongitude(jdn);
-  for (let d = jdn + 1; d <= endJdn; d++) {
-    const lng = solarLongitude(d);
-    // 황경이 targetLng를 지나는 지점 (360→0 경계 처리)
-    const crossed =
-      (prevLng <= targetLng && lng >= targetLng) ||
-      (targetLng < 30 && prevLng > 300 && lng < 60);
-    if (crossed) {
-      return d;
+// 절기 JD 캐시 (year-targetLng 키)
+const solarTermCache = new Map<string, number>();
+
+/**
+ * 특정 양력 연도에서 태양 황경이 targetLng가 되는 분수 JD(UT)를 반환.
+ * 정밀도: 약 1분 이내.
+ */
+function findSolarTermJD(year: number, targetLng: number, searchStartMonth: number): number {
+  const cacheKey = `${year}-${targetLng}`;
+  const cached = solarTermCache.get(cacheKey);
+  if (cached !== undefined) return cached;
+
+  const startJdn = toJDN(year, searchStartMonth, 1);
+
+  // 1) 일 단위로 교차일(crossing day) 찾기
+  let crossJdn = -1;
+  let prevDiff = lngDiff(startJdn, targetLng);
+  for (let d = 1; d <= 62; d++) {
+    const jd = startJdn + d;
+    const diff = lngDiff(jd, targetLng);
+    if (prevDiff < 0 && diff >= 0) {
+      crossJdn = jd;
+      break;
     }
-    prevLng = lng;
+    prevDiff = diff;
   }
-  // fallback: 검색 실패 시 대략값
-  return jdn + 30;
+  if (crossJdn < 0) {
+    // fallback: 찾지 못함
+    const fallback = startJdn + 30;
+    solarTermCache.set(cacheKey, fallback);
+    return fallback;
+  }
+
+  // 2) [crossJdn-1, crossJdn] 범위에서 이분법으로 분 단위 정밀도 탐색
+  let lo = crossJdn - 1;
+  let hi = crossJdn;
+  for (let i = 0; i < 30; i++) {
+    // 2^30 ≈ 10억분의 1일 ≈ 0.1ms (현실적으로 ~초 단위면 충분)
+    const mid = (lo + hi) / 2;
+    if (lngDiff(mid, targetLng) < 0) lo = mid;
+    else hi = mid;
+  }
+  const result = (lo + hi) / 2;
+  solarTermCache.set(cacheKey, result);
+  return result;
 }
 
 // ========== 절기 (節氣) 경계일 ==========
@@ -126,54 +170,68 @@ const SOLAR_TERM_BOUNDARIES = [
 const MONTH_BRANCHES = ["인", "묘", "진", "사", "오", "미", "신", "유", "술", "해", "자", "축"] as const;
 
 /**
- * 특정 양력 날짜가 몇 월(사주력 기준)인지 판정
- * @returns 사주월 1~12 (1=인월, 6=미월 등)
+ * 양력 날짜 + 한국 표준시(KST) 시각을 분수 JD(UT)로 변환.
+ * KST = UT + 9h → UT = KST - 9h
+ * @param hour  정수 시 (0~23, KST)
+ * @param minute 분 (0~59, 기본 0)
  */
-function getSajuMonth(year: number, month: number, day: number): { sajuMonth: number; sajuYear: number } {
+function toJD_UT(year: number, month: number, day: number, hour: number, minute = 0): number {
   const jdn = toJDN(year, month, day);
+  // JDN은 정오(12:00 UT) 기준이므로: JD = JDN - 0.5 + (시각/24)
+  const utHour = hour - 9; // KST → UT
+  return jdn - 0.5 + (utHour + minute / 60) / 24;
+}
 
-  // 입춘 JDN (인월 시작 = 사주력 새해)
-  const lichunJDN = findSolarTermJDN(year, 315, 1);
+/**
+ * 특정 양력 날짜+시각(KST)이 사주력 기준 몇 월인지 판정.
+ * 절기 경계를 분수 JD(분 단위 정밀도)로 비교하므로 경계일 출생자도 정확하게 처리됨.
+ * @returns 사주월 1~12 (1=인월, 6=미월 등), 사주년도
+ */
+function getSajuMonth(
+  year: number, month: number, day: number,
+  hour: number, minute = 0
+): { sajuMonth: number; sajuYear: number } {
+  // 출생 시각을 분수 JD(UT)로 변환
+  const birthJD = toJD_UT(year, month, day, hour, minute);
 
-  // 사주년도 결정: 입춘 이전이면 전년도
-  const sajuYear = jdn < lichunJDN ? year - 1 : year;
+  // 입춘(황경 315°) 시각 (분수 JD)
+  const lichunJD = findSolarTermJD(year, 315, 1);
 
-  // 각 절기 경계 JDN 계산 (해당 연도와 전년도 모두 고려)
-  // 소한(12월)은 전년도에 속할 수 있음
-  const boundaries: { sajuMonth: number; jdn: number }[] = [];
+  // 사주년도 결정: 입춘 시각 이전이면 전년도
+  const sajuYear = birthJD < lichunJD ? year - 1 : year;
 
-  // 인월(1월)부터 축월(12월)까지 순서대로 절기 경계 계산
+  // 12절기 경계를 분수 JD로 계산
+  const boundaries: { sajuMonth: number; jd: number }[] = [];
+
   for (let i = 1; i <= 12; i++) {
-    const term = SOLAR_TERM_BOUNDARIES[i % 12]; // i=1→입춘, i=2→경칩, ... i=12→소한(i%12=0)
+    const term = SOLAR_TERM_BOUNDARIES[i % 12]; // i=1→입춘, i=12→소한
     let termYear = sajuYear;
 
-    // 입춘(1월)~대설(11월)은 sajuYear, 소한(12월)은 sajuYear+1
     if (i >= 11) {
-      // 자월(11월/대설)과 축월(12월/소한)은 양력으로 다음해일 수 있음
-      const termInSajuYear = findSolarTermJDN(sajuYear, term.lng, term.searchMonth);
-      const termInNextYear = findSolarTermJDN(sajuYear + 1, term.lng, term.searchMonth);
-
-      // 현재 날짜 기준으로 올바른 연도 선택
-      if (jdn >= termInNextYear) {
-        termYear = sajuYear + 1;
-      } else if (jdn >= termInSajuYear) {
-        termYear = sajuYear;
+      // 대설(11월)·소한(12월)은 양력으로 다음해에 걸칠 수 있음
+      const jdInSajuYear = findSolarTermJD(sajuYear, term.lng, term.searchMonth);
+      const jdInNextYear = findSolarTermJD(sajuYear + 1, term.lng, term.searchMonth);
+      let jd: number;
+      if (i === 12) {
+        // 소한은 사주력 기준 항상 다음 양력해
+        jd = jdInNextYear;
+      } else {
+        // 대설: 사주년도에서 먼저 찾고, 이미 지났으면 다음해
+        jd = birthJD >= jdInNextYear ? jdInNextYear : jdInSajuYear;
       }
-    }
-    if (i === 12) {
-      // 소한은 항상 다음 양력해
-      termYear = sajuYear + 1;
+      boundaries.push({ sajuMonth: i, jd });
+      continue;
     }
 
     boundaries.push({
       sajuMonth: i,
-      jdn: findSolarTermJDN(termYear, term.lng, term.searchMonth),
+      jd: findSolarTermJD(termYear, term.lng, term.searchMonth),
     });
   }
 
-  // 날짜가 어느 월에 속하는지 판정 (역순으로 확인)
+  // 역순으로 탐색: 출생 JD가 해당 절기 JD 이상이면 그 월
   for (let i = boundaries.length - 1; i >= 0; i--) {
-    if (jdn >= boundaries[i].jdn) {
+    if (birthJD >= boundaries[i].jd) {
       return { sajuMonth: boundaries[i].sajuMonth, sajuYear };
     }
   }
@@ -232,37 +290,52 @@ function hourPillar(dayStemIdx: number, hourBranchIdx: number): { stem: string; 
 }
 
 /**
- * 시간(0~23) → 시지 인덱스 (0=子시 ~ 11=亥시)
- * 야자시 구분: 23:00~00:00 = 당일 자시, 00:00~01:00 = 익일 자시
+ * 시간(0~23) + 분(0~59) → 시지 인덱스 (0=子시 ~ 11=亥시)
+ * 야자시(夜子時): 23:00~23:59 → 당일 자시 (일주 변경 없음)
+ * 조자시(早子時): 00:00~00:59 → 익일 자시 (일주를 다음날로)
+ * 시진 경계: 각 시는 홀수 시 정각에 시작 (子시=23시, 丑시=01시, ...)
  */
-function hourTobranchIdx(hour: number): { branchIdx: number; isNextDay: boolean } {
-  if (hour === 23) return { branchIdx: 0, isNextDay: false }; // 야자시: 당일
-  if (hour === 0) return { branchIdx: 0, isNextDay: true };   // 조자시: 익일
-  // 1~2시 → 축시(1), 3~4시 → 인시(2), ..., 21~22시 → 해시(11)
-  const branchIdx = Math.floor((hour + 1) / 2);
+function hourTobranchIdx(hour: number, minute = 0): { branchIdx: number; isNextDay: boolean } {
+  const totalMin = hour * 60 + minute;
+  // 23:00 ~ 23:59: 야자시 (당일)
+  if (totalMin >= 23 * 60) return { branchIdx: 0, isNextDay: false };
+  // 00:00 ~ 00:59: 조자시 (익일)
+  if (totalMin < 60) return { branchIdx: 0, isNextDay: true };
+  // 01:00~02:59 → 丑(1), 03:00~04:59 → 寅(2), ..., 21:00~22:59 → 亥(11)
+  const branchIdx = Math.floor((totalMin - 60) / 120) + 1;
   return { branchIdx, isNextDay: false };
 }
 
 // ========== 메인 함수 ==========
 
 /**
- * 양력 생년월일시로 사주 사주(四柱) 계산
+ * 양력 생년월일시(KST)로 사주(四柱) 계산
+ * @param hour   시 (0~23, 한국표준시)
+ * @param minute 분 (0~59, 기본 0)
  */
 export function calculateFourPillars(
   year: number,
   month: number,
   day: number,
-  hour: number
+  hour: number,
+  minute = 0,
 ): FourPillars {
-  // 야자시 처리
-  const { branchIdx: hourBranchIdx, isNextDay } = hourTobranchIdx(hour);
+  // 진태양시 보정 (옵션)
+  let adjHour = hour, adjMinute = minute;
+  if (USE_TRUE_SOLAR_TIME) {
+    const totalMin = hour * 60 + minute + TRUE_SOLAR_TIME_OFFSET_MIN;
+    // 날짜 경계를 넘을 경우는 시주 판정에만 영향 (일주는 별도 처리)
+    adjHour = Math.floor(((totalMin % 1440) + 1440) % 1440 / 60);
+    adjMinute = ((totalMin % 60) + 60) % 60;
+  }
 
-  // 일주 계산 (야자시/조자시에 따라 일진 보정)
+  // 야자시/조자시 판정
+  const { branchIdx: hourBranchIdx, isNextDay } = hourTobranchIdx(adjHour, adjMinute);
+
+  // 일주: 조자시(00:00~00:59)이면 익일 일진 사용
   let dayYear = year, dayMonth = month, dayDay = day;
   if (isNextDay) {
-    // 00:00~01:00은 익일 일주 사용
-    const nextJdn = toJDN(year, month, day) + 1;
-    const nextDate = jdnToGregorian(nextJdn);
+    const nextDate = jdnToGregorian(toJDN(year, month, day) + 1);
     dayYear = nextDate.year;
     dayMonth = nextDate.month;
     dayDay = nextDate.day;
@@ -271,21 +344,16 @@ export function calculateFourPillars(
   const dayP = dayPillar(dayYear, dayMonth, dayDay);
   const dayStemIdx = HEAVENLY_STEMS.indexOf(dayP.stem as typeof HEAVENLY_STEMS[number]);
 
-  // 년주/월주는 원래 생년월일 기준
-  const { sajuMonth, sajuYear } = getSajuMonth(year, month, day);
+  // 년주·월주: 출생 시각(KST)과 절기 시각(분 단위)을 비교해 정확하게 판정
+  const { sajuMonth, sajuYear } = getSajuMonth(year, month, day, hour, minute);
   const yearP = yearPillar(sajuYear);
   const yearStemIdx = HEAVENLY_STEMS.indexOf(yearP.stem as typeof HEAVENLY_STEMS[number]);
   const monthP = monthPillar(yearStemIdx, sajuMonth);
 
-  // 시주 계산
+  // 시주
   const hourP = hourPillar(dayStemIdx, hourBranchIdx);
 
-  return {
-    year: yearP,
-    month: monthP,
-    day: dayP,
-    hour: hourP,
-  };
+  return { year: yearP, month: monthP, day: dayP, hour: hourP };
 }
 
 /** JDN → 그레고리력 날짜 역변환 */

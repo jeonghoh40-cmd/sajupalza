@@ -1,33 +1,38 @@
 import { BIRTH_HOURS, type AnalysisInput } from "@/lib/types";
 import { calculateFourPillars, formatPillarsForPrompt } from "@/lib/saju/calculator";
 import { calculateMbtiFromPillars, formatMbtiForPrompt } from "@/lib/saju/mbti";
+import { lunarToSolar } from "@/lib/saju/lunar";
 
 export function buildUserPrompt(input: AnalysisInput): string {
-  const hourInfo = BIRTH_HOURS.find((h) => {
-    if (input.birthHour === 23 || input.birthHour === 0) return h.value === 0;
-    return input.birthHour >= h.value * 2 + 1 && input.birthHour < h.value * 2 + 3;
-  }) ?? BIRTH_HOURS[Math.floor(((input.birthHour + 1) % 24) / 2)];
+  // BIRTH_HOURS.value가 이제 실제 시각값이므로 직접 매칭
+  const hourInfo = BIRTH_HOURS.find((h) => h.value === input.birthHour) ?? BIRTH_HOURS[5]; // fallback: 진시
 
   const today = new Date();
   const currentYear = today.getFullYear();
   const currentMonth = today.getMonth() + 1;
   const todayStr = `${currentYear}-${String(currentMonth).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
-  // 만 나이 계산
-  const birth = new Date(input.birthDate);
-  let age = currentYear - birth.getFullYear();
+  const isLunar = input.calendarType === "lunar";
+
+  // 음력 입력이면 양력으로 변환 (사주/수비학/만나이 계산에는 양력이 필요)
+  const [rawY, rawM, rawD] = input.birthDate.split("-").map(Number);
+  const solar = isLunar
+    ? lunarToSolar(rawY, rawM, rawD, input.isLeapMonth ?? false)
+    : { year: rawY, month: rawM, day: rawD };
+  const solarDateStr = `${solar.year}-${String(solar.month).padStart(2, "0")}-${String(solar.day).padStart(2, "0")}`;
+  const lunarNote = isLunar
+    ? ` (음력→양력 변환: ${solarDateStr}. 사주/수비학은 양력 기준, 자미두수는 음력 기준)`
+    : "";
+
+  // 만 나이 계산 (양력 기준)
+  let age = currentYear - solar.year;
   const hasBirthdayPassed =
-    currentMonth > birth.getMonth() + 1 ||
-    (currentMonth === birth.getMonth() + 1 && today.getDate() >= birth.getDate());
+    currentMonth > solar.month ||
+    (currentMonth === solar.month && today.getDate() >= solar.day);
   if (!hasBirthdayPassed) age--;
 
-  const isLunar = input.calendarType === "lunar";
-  const calendarLabel = isLunar ? "음력" : "양력";
-  const lunarNote = isLunar ? " (음력→양력 변환 후 사주 산출, 자미두수는 음력 사용)" : "";
-
   // 사주 사주(四柱) 사전 계산 (양력 기준)
-  const [y, m, d] = input.birthDate.split("-").map(Number);
-  const pillars = calculateFourPillars(y, m, d, input.birthHour);
+  const pillars = calculateFourPillars(solar.year, solar.month, solar.day, input.birthHour);
   const pillarsInfo = formatPillarsForPrompt(pillars);
 
   // MBTI 처리: 사용자 입력이 있으면 절대 우선 (ground truth), 없으면 참고용 추정
@@ -52,7 +57,11 @@ export function buildUserPrompt(input: AnalysisInput): string {
     ].join("\n");
   }
 
-  return `${input.birthDate}(${calendarLabel})${lunarNote} ${input.birthHour}시(${hourInfo.label}) ${input.gender === "male" ? "남" : "여"} ${input.koreanName}${input.englishName ? ` ${input.englishName}` : ""} 오늘날짜:${todayStr} 만나이:${age}세 한국나이:${age + 1}세 ${currentYear}년 운세 포함. monthlyGuide는 ${currentYear}년 ${currentMonth}월부터 6개월.
+  const displayDate = isLunar
+    ? `${input.birthDate}(음력)→${solarDateStr}(양력)`
+    : `${solarDateStr}(양력)`;
+
+  return `${displayDate}${lunarNote} ${input.birthHour}시(${hourInfo.label}) ${input.gender === "male" ? "남" : "여"} ${input.koreanName}${input.englishName ? ` ${input.englishName}` : ""} 오늘날짜:${todayStr} 만나이:${age}세 한국나이:${age + 1}세 ${currentYear}년 운세 포함. monthlyGuide는 ${currentYear}년 ${currentMonth}월부터 6개월.
 
 ${pillarsInfo}
 

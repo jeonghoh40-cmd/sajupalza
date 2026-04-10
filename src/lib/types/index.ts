@@ -1,29 +1,33 @@
 // === 입력 타입 ===
 
 export interface AnalysisInput {
-  birthDate: string; // YYYY-MM-DD
-  birthHour: number; // 0-23
+  birthDate: string;       // YYYY-MM-DD
+  birthHour: number;       // 0~23 (KST, BIRTH_HOURS.value 기준)
   calendarType: "solar" | "lunar"; // 양력/음력
+  isLeapMonth?: boolean;   // 음력 윤달 여부 (calendarType==="lunar" 시만 유효)
   gender: "male" | "female";
   koreanName: string;
   englishName?: string;
-  mbtiType?: string; // 예: "INTJ"
+  mbtiType?: string;       // 예: "INTJ"
 }
 
 // 시진 매핑
+// value: 해당 시진의 대표 시각 (정수 시, KST)
+// 야자시(夜子時 23:00~): value=23 / 조자시(早子時 00:00~): value=0
 export const BIRTH_HOURS = [
-  { label: "자시 (子時)", range: "23:00~01:00", value: 0 },
-  { label: "축시 (丑時)", range: "01:00~03:00", value: 1 },
-  { label: "인시 (寅時)", range: "03:00~05:00", value: 2 },
-  { label: "묘시 (卯時)", range: "05:00~07:00", value: 3 },
-  { label: "진시 (辰時)", range: "07:00~09:00", value: 4 },
-  { label: "사시 (巳時)", range: "09:00~11:00", value: 5 },
-  { label: "오시 (午時)", range: "11:00~13:00", value: 6 },
-  { label: "미시 (未時)", range: "13:00~15:00", value: 7 },
-  { label: "신시 (申時)", range: "15:00~17:00", value: 8 },
-  { label: "유시 (酉時)", range: "17:00~19:00", value: 9 },
-  { label: "술시 (戌時)", range: "19:00~21:00", value: 10 },
-  { label: "해시 (亥時)", range: "21:00~23:00", value: 11 },
+  { label: "야자시 (夜子時)", range: "23:00~24:00", value: 23 }, // 당일 자시
+  { label: "조자시 (早子時)", range: "00:00~01:00", value: 0  }, // 익일 자시
+  { label: "축시 (丑時)",     range: "01:00~03:00", value: 1  },
+  { label: "인시 (寅時)",     range: "03:00~05:00", value: 3  },
+  { label: "묘시 (卯時)",     range: "05:00~07:00", value: 5  },
+  { label: "진시 (辰時)",     range: "07:00~09:00", value: 7  },
+  { label: "사시 (巳時)",     range: "09:00~11:00", value: 9  },
+  { label: "오시 (午時)",     range: "11:00~13:00", value: 11 },
+  { label: "미시 (未時)",     range: "13:00~15:00", value: 13 },
+  { label: "신시 (申時)",     range: "15:00~17:00", value: 15 },
+  { label: "유시 (酉時)",     range: "17:00~19:00", value: 17 },
+  { label: "술시 (戌時)",     range: "19:00~21:00", value: 19 },
+  { label: "해시 (亥時)",     range: "21:00~23:00", value: 21 },
 ] as const;
 
 // === Claude 응답 타입 ===
