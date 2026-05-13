@@ -196,6 +196,13 @@ export default function TarotPage() {
             >
               카드 뽑으러 가기 →
             </button>
+            <button
+              type="button"
+              onClick={() => router.push("/")}
+              className="w-full mt-2 py-2.5 rounded-xl text-xs text-[var(--muted)] hover:text-white hover:bg-[var(--surface-light)] border border-[var(--border)] transition-colors"
+            >
+              ← 처음 화면으로 돌아가기
+            </button>
           </form>
         )}
 
