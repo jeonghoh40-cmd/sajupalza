@@ -203,7 +203,16 @@ export default function TarotPage() {
         {phase === "select" && (
           <div>
             <div className="bg-[var(--surface)] rounded-2xl p-5 border border-[var(--border)] mb-4">
-              <p className="text-xs text-[var(--muted)] mb-1">질문</p>
+              <div className="flex items-start justify-between gap-2 mb-1">
+                <p className="text-xs text-[var(--muted)]">질문</p>
+                <button
+                  type="button"
+                  onClick={handleReset}
+                  className="text-xs px-2 py-0.5 rounded-md text-purple-300 hover:text-white hover:bg-purple-900/30 border border-purple-700/40 transition-colors whitespace-nowrap"
+                >
+                  ✏️ 질문 다시 쓰기
+                </button>
+              </div>
               <p className="text-sm font-medium leading-relaxed">{question}</p>
             </div>
 
@@ -282,6 +291,15 @@ export default function TarotPage() {
             <div className="text-center mb-4">
               <h3 className="text-sm font-semibold">카드가 모습을 드러냅니다</h3>
               {loading && <p className="text-xs text-purple-400 mt-2 animate-pulse">우주의 메시지를 해석하는 중...</p>}
+              {!loading && (
+                <button
+                  type="button"
+                  onClick={handleReset}
+                  className="mt-3 text-xs px-2.5 py-1 rounded-md text-purple-300 hover:text-white hover:bg-purple-900/30 border border-purple-700/40 transition-colors"
+                >
+                  ← 처음으로
+                </button>
+              )}
             </div>
 
             <div className="grid grid-cols-5 gap-2 mb-4">
