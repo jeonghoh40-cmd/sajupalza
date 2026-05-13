@@ -132,17 +132,21 @@ export default function TarotPage() {
   return (
     <main className="min-h-screen flex flex-col items-center px-4 py-6 sm:py-8 safe-area-inset">
       {/* 헤더 */}
-      <div className="w-full max-w-lg mb-3 sm:mb-4 flex items-center justify-between">
+      <div className="w-full max-w-lg mb-3 sm:mb-4 flex items-center justify-between gap-2">
         <button
-          onClick={() => router.push("/")}
-          className="text-[var(--muted)] text-sm hover:text-white transition-colors"
+          type="button"
+          onClick={() => {
+            handleReset();
+            router.push("/");
+          }}
+          className="px-3 py-1.5 rounded-lg text-[var(--muted)] text-xs sm:text-sm hover:text-white hover:bg-[var(--surface)] active:bg-[var(--surface-light)] border border-[var(--border)] transition-all whitespace-nowrap"
         >
-          ← 메인
+          ← 다시 분석하기
         </button>
         <h1 className="text-base font-semibold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
           🃏 타로 5장 리딩
         </h1>
-        <div className="w-10" />
+        <div className="w-[88px] sm:w-[100px]" aria-hidden />
       </div>
 
       {/* 단계 표시 */}
