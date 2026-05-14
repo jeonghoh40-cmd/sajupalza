@@ -159,7 +159,7 @@ export default function ResultPage() {
         {/* 시스템별 상세 (접이식) */}
         <div className="mt-4 space-y-2">
           <AccordionSection
-            title="만세력"
+            title="사주팔자"
             icon="📜"
             isOpen={openSection === "saju"}
             onToggle={() => toggleSection("saju")}

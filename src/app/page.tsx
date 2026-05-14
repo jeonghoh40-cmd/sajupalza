@@ -130,7 +130,7 @@ export default function Home() {
       {/* 헤더 */}
       <div className="text-center mb-6 sm:mb-8 mt-4">
         <h1 className="text-2xl sm:text-3xl font-bold mb-2 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-          만세력
+          사주팔자
         </h1>
         <p className="text-[var(--muted)] text-sm">
           4개의 도사가 당신을 분석합니다
@@ -348,7 +348,7 @@ function LoadingSpinner() {
 
 function LoadingOverlay({ progress }: { progress: number }) {
   const stepLabel =
-    progress < 20 ? "만세력을 펼쳐보고 있습니다..." :
+    progress < 20 ? "사주팔자를 풀어보고 있습니다..." :
     progress < 40 ? "자미두수 명반을 배치하고 있습니다..." :
     progress < 60 ? "수비학 운명수를 계산하고 있습니다..." :
     progress < 80 ? "네 가지 운명을 교차검증하고 있습니다..." :
