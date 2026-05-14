@@ -444,13 +444,23 @@ export default function TarotPage() {
               <p className="text-sm leading-relaxed">{reading.advice}</p>
             </div>
 
-            {/* 다시 보기 */}
-            <button
-              onClick={handleReset}
-              className="w-full py-3 rounded-xl text-sm font-semibold bg-[var(--surface)] border border-[var(--border)] text-[var(--muted)] hover:text-white transition-colors mb-8"
-            >
-              새로운 질문하기
-            </button>
+            {/* 다시 보기 / 메인 이동 */}
+            <div className="grid grid-cols-2 gap-2 mb-8">
+              <button
+                type="button"
+                onClick={handleReset}
+                className="py-3 rounded-xl text-sm font-semibold bg-[var(--surface)] border border-[var(--border)] text-[var(--muted)] hover:text-white transition-colors"
+              >
+                새로운 질문하기
+              </button>
+              <button
+                type="button"
+                onClick={() => router.push("/")}
+                className="py-3 rounded-xl text-sm font-semibold bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:opacity-90 transition-opacity"
+              >
+                메인으로 가기 →
+              </button>
+            </div>
           </div>
         )}
       </div>
